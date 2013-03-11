@@ -12,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -831,5 +832,51 @@ public class JsonTest {
         assertEquals(2, map.size());
         assertEquals(map.get("yes"), true);
         assertEquals(3, ((List<Integer>)map.get("rs")).get(2).intValue());
+    }
+
+    @Test
+    public void issues_406_about_number() {
+        Map<String, Object> map = new LinkedHashMap<String, Object>();
+        map.put("byte", Byte.MAX_VALUE);
+        map.put("short", Short.MAX_VALUE);
+        map.put("integer", Integer.MAX_VALUE);
+        map.put("long", Long.MAX_VALUE);
+        map.put("float", Float.MAX_VALUE);
+        map.put("double", Double.MAX_VALUE);
+        String result = Json.toJson(map, JsonFormat.compact());
+        String vaule = String.format("{\"byte\":%s,\"short\":%s,\"integer\":%s,\"long\":%s,\"float\":%s,\"double\":%s}",
+                                     new BigDecimal(Byte.MAX_VALUE),
+                                     new BigDecimal(Short.MAX_VALUE),
+                                     new BigDecimal(Integer.MAX_VALUE),
+                                     new BigDecimal(Long.MAX_VALUE),
+                                     new BigDecimal(Float.MAX_VALUE),
+                                     new BigDecimal(Double.MAX_VALUE));
+        assertEquals(vaule, result);
+    }
+
+    @Test
+    public void issues_406_about_number_has_point() {
+        LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>();
+        map.put("byte", new BigDecimal(Byte.MAX_VALUE).divide(new BigDecimal(Byte.MIN_VALUE)));
+        map.put("short", new BigDecimal(Short.MAX_VALUE).divide(new BigDecimal(Short.MIN_VALUE)));
+        map.put("integer", new BigDecimal(Integer.MAX_VALUE).divide(new BigDecimal(Integer.MIN_VALUE)));
+        map.put("long", new BigDecimal(Long.MAX_VALUE).divide(new BigDecimal(Long.MIN_VALUE)));
+        map.put("float", new BigDecimal(Float.MAX_VALUE).divide(new BigDecimal(Float.MIN_VALUE)));
+        map.put("double", new BigDecimal(Double.MAX_VALUE).divide(new BigDecimal(Double.MIN_VALUE)));
+        String result = Json.toJson(map, JsonFormat.compact());
+        String vaule = String.format("{\"byte\":%s,\"short\":%s,\"integer\":%s,\"long\":%s,\"float\":%s,\"double\":%s}",
+                                     new BigDecimal(Byte.MAX_VALUE).divide(new BigDecimal(Byte.MIN_VALUE)),
+                                     new BigDecimal(Short.MAX_VALUE).divide(new BigDecimal(Short.MIN_VALUE)),
+                                     new BigDecimal(Integer.MAX_VALUE).divide(new BigDecimal(Integer.MIN_VALUE)),
+                                     new BigDecimal(Long.MAX_VALUE).divide(new BigDecimal(Long.MIN_VALUE)),
+                                     new BigDecimal(Float.MAX_VALUE).divide(new BigDecimal(Float.MIN_VALUE)),
+                                     new BigDecimal(Double.MAX_VALUE).divide(new BigDecimal(Double.MIN_VALUE)));
+        assertEquals(vaule, result);
+
+        Double doubleValue = 11111111111111111111.09;
+        Map<String, Number> doubleMap = new LinkedHashMap<String, Number>();
+        doubleMap.put("doubleValue", 11111111111111111111.09);
+
+        assertEquals(String.format("{\"double\":%s}", new BigDecimal(doubleValue)), Json.toJson(doubleMap, JsonFormat.compact()));
     }
 }

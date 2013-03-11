@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -55,8 +56,19 @@ public class JsonRenderImpl implements JsonRender {
             if (mr.isEnum()) {
                 string2Json(((Enum) obj).name());
             }
-            // 数字，布尔等
-            else if (mr.isNumber() || mr.isBoolean()) {
+            // 数字
+            else if (mr.isNumber()) {
+                // float与double类型的话需要单独进行处理
+                if (mr.isFloat()) {
+                    writer.append(new BigDecimal(Float.parseFloat(obj.toString())).toString());
+                } else if (mr.isDouble()) {
+                    writer.append(new BigDecimal(Double.parseDouble(obj.toString())).toString());
+                } else {
+                    writer.append(new BigDecimal(obj.toString()).toString());
+                }
+            }
+            // 布尔
+            else if (mr.isBoolean()) {
                 writer.append(obj.toString());
             }
             // 字符串
